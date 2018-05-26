@@ -6,9 +6,41 @@
 <hr />
 
 <form>
-    @Html.DropDownListFor(x=>Model.SelectedRegion, new SelectList(Model.Regions, "Code", "Code"))
+    @Html.DropDownListFor(x=>Model.SelectedRegion, new SelectList(Model.Regions, "Value", "Text"))
+    
+    
+    @Html.DropDownListFor(x=>Model.SelectedCity, new SelectList(Model.Cities, "Value", "Text"))
+    
+    
 </form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.querySelector('#SelectedRegion').onchange = async function(e) {
+            const selected = e.target.value;
+            console.log(selected);
+            const citiesSelect = document.querySelector('#SelectedCity');
+            if (!selected) {
+                return;
+            }
+            try {
+                const response = await fetch('@Url.Action("GetCities")',
+                    {
+                        body: JSON.stringify({region: selected})
+                    });
+                const cities = await response.json();
+                console.log(cities);
+                for (const city of cities) {
+                    const child = document.createElement('option');
+                    child.value = city.code;
+                    child.innerText = city.name;
+                    citiesSelect.appendChild(child);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+
+        }
+    </script>
 }

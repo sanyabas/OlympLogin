@@ -21,5 +21,11 @@ namespace OlympLogin.ViewModels
 
         [Display(Name = "Город")] public string SelectedCity { get; set; }
         public IEnumerable<SelectListItem> Cities { get; set; }
+
+        public UserRegisterViewModel()
+        {
+            Regions = new List<SelectListItem>();
+            Cities = new List<SelectListItem>();
+        }
     }
 }

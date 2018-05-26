@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OlympLogin.Models;
+using OlympLogin.ViewModels;
 
 namespace OlympLogin.Controllers
 {
@@ -48,9 +49,30 @@ namespace OlympLogin.Controllers
         // GET: Users/Create
         public IActionResult Create()
         {
-            ViewData["StreetCode"] = new SelectList(_context.Street, "Code", "Code");
-            ViewData["TerritoryCode"] = new SelectList(_context.Territory, "Code", "Code");
-            return View();
+            var regions = _context.Regions.AsNoTracking()
+                .OrderBy(region => region.Name)
+                .Select(region =>
+                    new SelectListItem
+                    {
+                        Value = region.Code,
+                        Text = region.Name
+                    }).ToList();
+            var model = new UserRegisterViewModel
+            {
+                Regions = new SelectList(regions, "Value", "Text")
+            };
+            //ViewData["StreetCode"] = new SelectList(_context.Street, "Code", "Code");
+            //ViewData["TerritoryCode"] = new SelectList(_context.Territory, "Code", "Code");
+            return View("Register", model);
+        }
+
+        public IActionResult GetCities(string region)
+        {
+            if (string.IsNullOrEmpty(region))
+                return null;
+            var cities = _context.Territory.AsNoTracking()
+                .Where(ter=>ter.Code.StartsWith(region))
+                .Include(ter=>ter.Abbreviation)
         }
 
         // POST: Users/Create
