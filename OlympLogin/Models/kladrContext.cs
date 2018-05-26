@@ -10,6 +10,7 @@ namespace OlympLogin.Models
         public virtual DbSet<Territory> Territory { get; set; }
         public virtual DbSet<Users> Users { get; set; }
         public virtual DbSet<Region> Regions { get; set; }
+        public virtual DbSet<Abbreviation> Abbreviation { get; set; }
 
         // Unable to generate entity type for table 'dbo.Name'. Please see the warning messages.
 
@@ -108,6 +109,19 @@ namespace OlympLogin.Models
             });
 
             modelBuilder.Entity<Region>(entity => { entity.HasKey(e => e.Code); });
+
+            modelBuilder.Entity<Abbreviation>(entity =>
+            {
+                entity.HasKey(e => new {e.Level, e.ShortName});
+
+                entity.Property(e => e.Level).HasMaxLength(5);
+
+                entity.Property(e => e.ShortName).HasMaxLength(10);
+
+                entity.Property(e => e.FullName).HasMaxLength(29);
+
+                entity.Property(e => e.TypeCode).HasMaxLength(3);
+            });
         }
     }
 }

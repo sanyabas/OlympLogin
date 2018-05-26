@@ -71,8 +71,22 @@ namespace OlympLogin.Controllers
             if (string.IsNullOrEmpty(region))
                 return null;
             var cities = _context.Territory.AsNoTracking()
-                .Where(ter=>ter.Code.StartsWith(region))
-                .Include(ter=>ter.Abbreviation)
+                .Join(_context.Abbreviation, t=>t.Abbreviation, a=>a.ShortName, (terr, abbr)=>new
+                {
+                    Name=terr.Name,
+                    Type=abbr.FullName,
+                    Code=terr.Code,
+                    Level=abbr.Level,
+                    Status=terr.Status
+                })
+                .Where(ter => ter.Code.StartsWith(region) && ter.Level=="4")
+                .OrderBy(ter=>ter.Name)
+                .Select(ter=> new SelectListItem
+                {
+                    Value=ter.Code,
+                    Text = $"{ter.Type} {ter.Name}"
+                }).ToList();
+            return Json(new SelectList(cities, "Value", "Text"));
         }
 
         // POST: Users/Create

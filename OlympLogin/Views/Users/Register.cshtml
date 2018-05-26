@@ -21,20 +21,18 @@
             const selected = e.target.value;
             console.log(selected);
             const citiesSelect = document.querySelector('#SelectedCity');
+            citiesSelect.options.length = 1;
             if (!selected) {
                 return;
             }
             try {
-                const response = await fetch('@Url.Action("GetCities")',
-                    {
-                        body: JSON.stringify({region: selected})
-                    });
+                const response = await fetch(`@Url.Action("GetCities")?region=${selected}`);
                 const cities = await response.json();
                 console.log(cities);
                 for (const city of cities) {
                     const child = document.createElement('option');
-                    child.value = city.code;
-                    child.innerText = city.name;
+                    child.value = city.value;
+                    child.innerText = city.text;
                     citiesSelect.appendChild(child);
                 }
             } catch (e) {
