@@ -1,0 +1,14 @@
+﻿@model OlympLogin.ViewModels.UserRegisterViewModel
+
+<h2>Create</h2>
+
+<h4>Users</h4>
+<hr />
+
+<form>
+    @Html.DropDownListFor(x=>Model.SelectedRegion, new SelectList(Model.Regions, "Code", "Code"))
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

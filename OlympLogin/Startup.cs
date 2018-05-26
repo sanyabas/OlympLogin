@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OlympLogin.Models;
 
 namespace OlympLogin
 {
@@ -22,6 +24,10 @@ namespace OlympLogin
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+
+            const string connection = @"Server=lenovo-g500;Database=kladr;Trusted_Connection=True;";
+            services.AddDbContext<kladrContext>(options => options.UseSqlServer(connection));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
