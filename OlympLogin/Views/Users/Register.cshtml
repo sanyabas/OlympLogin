@@ -1,9 +1,7 @@
 ﻿@model OlympLogin.ViewModels.UserRegisterViewModel
 
-<h2>Create</h2>
+<h2>@ViewData["Title"]</h2>
 
-<h4>Users</h4>
-<hr />
 
 <form asp-antiforgery="true" asp-action="Register" asp-controller="Users">
     <div class="validation" asp-validation-summary="ModelOnly"></div>
@@ -12,7 +10,7 @@
         <label asp-for="Login">Логин</label>
         <input type="text" placeholder="Логин" asp-for="Login" required>
         <label asp-for="Password">Пароль</label>
-        <input type="password" placeholder="Пароль" asp-for="Password" required>
+        <input type="password" placeholder="Пароль" asp-for="Password">
         <label asp-for="LastName">Фамилия</label>
         <input type="text" placeholder="Фамилия" asp-for="LastName" required>
         <label asp-for="FirstName">Имя</label>

@@ -207,6 +207,14 @@ namespace OlympLogin.Data
 
         public IEnumerable<SelectListItem> GetRegions()
         {
+            var tip = new List<SelectListItem>
+            {
+                new SelectListItem
+                {
+                    Value = null,
+                    Text = "Выберите регион"
+                }
+            };
             var regions = _context.Regions.AsNoTracking()
                 .OrderBy(region => region.Name)
                 .Select(region =>
@@ -215,7 +223,8 @@ namespace OlympLogin.Data
                         Value = region.Code,
                         Text = $"{region.Type} {region.Name}"
                     }).ToList();
-            return regions;
+            tip.AddRange(regions);
+            return tip;
         }
 
         public async Task<(string, string)> MakeAddress(UserRegisterViewModel model)

@@ -42,45 +42,33 @@ namespace OlympLogin.Controllers
             return View("Details", user);
         }
 
-        // GET: Users/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var users = await _context.Users
-                .Include(u => u.StreetCodeNavigation)
-                .Include(u => u.TerritoryCodeNavigation)
-                .SingleOrDefaultAsync(m => m.Id == id);
-            if (users == null)
-            {
-                return NotFound();
-            }
-
-            return View(users);
-        }
-
         // GET: Users/Create
         public IActionResult Register()
         {
-            var tip = new List<SelectListItem>
-            {
-                new SelectListItem
-                {
-                    Value = null,
-                    Text = "Выберите регион"
-                }
-            };
             var repo=new AddressRepository(_context);
             var regions = repo.GetRegions();
-            tip.AddRange(regions);
             var model = new UserRegisterViewModel
             {
-                Regions = new SelectList(tip, "Value", "Text")
+                Regions = new SelectList(regions, "Value", "Text")
             };
+            ViewData["Title"] = "Регистрация";
             return View("Register", model);
+        }
+
+        public IActionResult GetLocalities(string region)
+        {
+            Console.WriteLine(region);
+            var repo = new AddressRepository(_context, region);
+            var result = repo.GetLocalities();
+            return Json(new SelectList(result, "Value", "Text"));
+        }
+
+        public IActionResult GetStreets(string city)
+        {
+            Console.WriteLine(city);
+            var repo = new AddressRepository(_context);
+            var result = repo.GetStreets(city);
+            return Json(new SelectList(result, "Value", "Text"));
         }
 
         [HttpPost]
@@ -150,119 +138,22 @@ namespace OlympLogin.Controllers
             return _context.Users.First(user => user.Login == login);
         }
 
-        private string MakeAddress(UserRegisterViewModel model)
-        {
-            var result =
-                $"{model.SelectedRegion}, {model.SelectedCity}, {model.SelectedStreet}, д. {model.Building}, кв. {model.Flat}";
-            return result;
-        }
-
-        public IEnumerable<SelectListItem> GetCities(string region)
-        {
-            if (string.IsNullOrEmpty(region))
-                return null;
-            var cityReg = new Regex($"{region}\\d{6}0{5}");
-            var cities = _context.Territory.AsNoTracking()
-                .Join(_context.Abbreviation, t => t.Abbreviation, a => a.ShortName, (terr, abbr) => new
-                {
-                    Name = terr.Name,
-                    Type = abbr.FullName,
-                    Code = terr.Code,
-                    Level = abbr.Level,
-                    Status = terr.Status
-                })
-                .Where(ter => cityReg.IsMatch(ter.Code) && ter.Level == "3")
-                .OrderBy(ter => ter.Name)
-                .Select(ter => new SelectListItem
-                {
-                    Value = ter.Code,
-                    Text = $"{ter.Type} {ter.Name}"
-                }).ToList();
-            return cities;
-            //return Json(new SelectList(cities, "Value", "Text"));
-        }
-
-        //public IEnumerable<SelectListItem> GetVillages(string region)
-        //{
-        //    if (string.IsNullOrEmpty(region))
-        //        return null;
-
-        //}
-
-        public IActionResult GetRayons(string region)
-        {
-            if (string.IsNullOrEmpty(region))
-                return null;
-            var rayonReg = new Regex($"{region}\\d{6}0{5}");
-            var rayons = _context.Territory.AsNoTracking()
-                .Join(_context.Abbreviation, t => t.Abbreviation, a => a.ShortName, (terr, abbr) => new
-                {
-                    Name = terr.Name,
-                    Type = abbr.FullName,
-                    Code = terr.Code,
-                    Level = abbr.Level,
-                    Status = terr.Status
-                })
-                .Where(ter => rayonReg.IsMatch(ter.Code) && ter.Level == "2")
-                .OrderBy(ter => ter.Name)
-                .Select(ter => new SelectListItem
-                {
-                    Value = ter.Code,
-                    Text = $"{ter.Name} {ter.Type}"
-                }).ToList();
-            return Json(new SelectList(rayons, "Value", "Text"));
-        }
-
-        public IActionResult GetLocalities(string region)
-        {
-            Console.WriteLine(region);
-            var repo = new AddressRepository(_context, region);
-            var result = repo.GetLocalities();
-            return Json(new SelectList(result, "Value", "Text"));
-        }
-
-        public IActionResult GetStreets(string city)
-        {
-            Console.WriteLine(city);
-            var repo = new AddressRepository(_context);
-            var result = repo.GetStreets(city);
-            return Json(new SelectList(result, "Value", "Text"));
-        }
-
-        // POST: Users/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,LastName,FirstName,MiddleName,TerritoryCode,StreetCode,Building,Flat")] Users users)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(users);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["StreetCode"] = new SelectList(_context.Street, "Code", "Code", users.StreetCode);
-            ViewData["TerritoryCode"] = new SelectList(_context.Territory, "Code", "Code", users.TerritoryCode);
-            return View(users);
-        }
-
         // GET: Users/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public IActionResult Edit()
         {
-            if (id == null)
+            var user = GetCurrentUser();
+            var repo = new AddressRepository(_context);
+            var regions = repo.GetRegions();
+            var model = new UserRegisterViewModel
             {
-                return NotFound();
-            }
-
-            var users = await _context.Users.SingleOrDefaultAsync(m => m.Id == id);
-            if (users == null)
-            {
-                return NotFound();
-            }
-            ViewData["StreetCode"] = new SelectList(_context.Street, "Code", "Code", users.StreetCode);
-            ViewData["TerritoryCode"] = new SelectList(_context.Territory, "Code", "Code", users.TerritoryCode);
-            return View(users);
+                Login = user.Login,
+                LastName = user.LastName,
+                FirstName = user.FirstName,
+                MiddleName = user.MiddleName,
+                Regions = new SelectList(regions,"Value", "Text")
+            };
+            ViewData["Title"] = "Изменение";
+            return View("Register", model);
         }
 
         // POST: Users/Edit/5
@@ -270,67 +161,46 @@ namespace OlympLogin.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,LastName,FirstName,MiddleName,TerritoryCode,StreetCode,Building,Flat")] Users users)
+        public async Task<IActionResult> Edit(UserRegisterViewModel model)
         {
-            if (id != users.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    _context.Update(users);
-                    await _context.SaveChangesAsync();
+                    var user = GetCurrentUser();
+                    if (user != null)
+                    {
+                        user.Login = model.Login;
+                        if (!string.IsNullOrEmpty(model.Password))
+                        {
+                            var hashed = HashPassword(model.Password);
+                            user.Password = hashed;
+                        }
+
+                        user.Role = Role.User;
+                        user.LastName = model.LastName;
+                        user.FirstName = model.FirstName;
+                        user.MiddleName = model.MiddleName;
+                        if (!string.IsNullOrEmpty(model.SelectedStreet))
+                        {
+                            var repo = new AddressRepository(_context, model.SelectedRegion);
+                            var (address, index) = await repo.MakeAddress(model);
+                            user.Address = address;
+                            user.Index = index;
+                        }
+
+                        _context.Users.Update(user);
+                        await _context.SaveChangesAsync();
+
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UsersExists(users.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["StreetCode"] = new SelectList(_context.Street, "Code", "Code", users.StreetCode);
-            ViewData["TerritoryCode"] = new SelectList(_context.Territory, "Code", "Code", users.TerritoryCode);
-            return View(users);
-        }
-
-        // GET: Users/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var users = await _context.Users
-                .Include(u => u.StreetCodeNavigation)
-                .Include(u => u.TerritoryCodeNavigation)
-                .SingleOrDefaultAsync(m => m.Id == id);
-            if (users == null)
-            {
-                return NotFound();
-            }
-
-            return View(users);
-        }
-
-        // POST: Users/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var users = await _context.Users.SingleOrDefaultAsync(m => m.Id == id);
-            _context.Users.Remove(users);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return View("Register", model);
         }
 
         public IActionResult Login()
@@ -368,11 +238,6 @@ namespace OlympLogin.Controllers
                 iterationCount: 10000,
                 numBytesRequested: 256 / 8));
             return hashed;
-        }
-
-        private bool UsersExists(int id)
-        {
-            return _context.Users.Any(e => e.Id == id);
         }
     }
 }
