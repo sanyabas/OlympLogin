@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -49,6 +50,14 @@ namespace OlympLogin.Controllers
         // GET: Users/Create
         public IActionResult Create()
         {
+            var tip = new List<SelectListItem>
+            {
+                new SelectListItem
+                {
+                    Value = null,
+                    Text = "Выберите регион"
+                }
+            };
             var regions = _context.Regions.AsNoTracking()
                 .OrderBy(region => region.Name)
                 .Select(region =>
@@ -57,12 +66,11 @@ namespace OlympLogin.Controllers
                         Value = region.Code,
                         Text = region.Name
                     }).ToList();
+            tip.AddRange(regions);
             var model = new UserRegisterViewModel
             {
-                Regions = new SelectList(regions, "Value", "Text")
+                Regions = new SelectList(tip, "Value", "Text")
             };
-            //ViewData["StreetCode"] = new SelectList(_context.Street, "Code", "Code");
-            //ViewData["TerritoryCode"] = new SelectList(_context.Territory, "Code", "Code");
             return View("Register", model);
         }
 
@@ -70,6 +78,7 @@ namespace OlympLogin.Controllers
         {
             if (string.IsNullOrEmpty(region))
                 return null;
+            var cityReg = new Regex($"{region}\\d{6}0{5}");
             var cities = _context.Territory.AsNoTracking()
                 .Join(_context.Abbreviation, t=>t.Abbreviation, a=>a.ShortName, (terr, abbr)=>new
                 {
@@ -79,7 +88,7 @@ namespace OlympLogin.Controllers
                     Level=abbr.Level,
                     Status=terr.Status
                 })
-                .Where(ter => ter.Code.StartsWith(region) && ter.Level=="4")
+                .Where(ter => cityReg.IsMatch(ter.Code) && ter.Level=="3")
                 .OrderBy(ter=>ter.Name)
                 .Select(ter=> new SelectListItem
                 {
@@ -87,6 +96,46 @@ namespace OlympLogin.Controllers
                     Text = $"{ter.Type} {ter.Name}"
                 }).ToList();
             return Json(new SelectList(cities, "Value", "Text"));
+        }
+
+        public IActionResult GetRayons(string region)
+        {
+            if (string.IsNullOrEmpty(region))
+                return null;
+            var rayonReg = new Regex($"{region}\\d{6}0{5}");
+            var rayons = _context.Territory.AsNoTracking()
+                .Join(_context.Abbreviation, t => t.Abbreviation, a => a.ShortName, (terr, abbr) => new
+                {
+                    Name = terr.Name,
+                    Type = abbr.FullName,
+                    Code = terr.Code,
+                    Level = abbr.Level,
+                    Status = terr.Status
+                })
+                .Where(ter => rayonReg.IsMatch(ter.Code) && ter.Level == "2")
+                .OrderBy(ter => ter.Name)
+                .Select(ter => new SelectListItem
+                {
+                    Value = ter.Code,
+                    Text = $"{ter.Name} {ter.Type}"
+                }).ToList();
+            return Json(new SelectList(rayons, "Value", "Text"));
+        }
+
+        public IActionResult GetStreets(string city)
+        {
+            if (string.IsNullOrEmpty(city))
+                return null;
+            var streets = _context.Street.AsNoTracking()
+                .Join(_context.Abbreviation, s=>s.Abbr, a=>a.ShortName, (street, abbr) =>  new
+                {
+                    Name=street.Name,
+                    Type=abbr.FullName,
+                    Code=street.Code,
+                    Index=street.Index,
+                    Level=abbr.Level
+                })
+                .Where()
         }
 
         // POST: Users/Create

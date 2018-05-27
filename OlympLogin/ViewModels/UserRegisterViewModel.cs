@@ -22,10 +22,15 @@ namespace OlympLogin.ViewModels
         [Display(Name = "Город")] public string SelectedCity { get; set; }
         public IEnumerable<SelectListItem> Cities { get; set; }
 
+        [Display(Name = "Улица")]
+        public string SelectedStreet { get; set; }
+        public IEnumerable<SelectListItem> Streets { get; set; }
+
         public UserRegisterViewModel()
         {
             Regions = new List<SelectListItem>();
             Cities = new List<SelectListItem>();
+            Streets = new List<SelectListItem>();
         }
     }
 }

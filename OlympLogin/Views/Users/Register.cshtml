@@ -11,6 +11,8 @@
     
     @Html.DropDownListFor(x=>Model.SelectedCity, new SelectList(Model.Cities, "Value", "Text"))
     
+    @Html.DropDownListFor(x=>Model.SelectedStreet, new SelectList(Model.Streets, "Value", "Text"))
+    
     
 </form>
 
@@ -39,6 +41,29 @@
                 console.error(e);
             }
 
+        }
+
+        document.querySelector('#SelectedCity').onchange = async function(e) {
+            const selected = e.target.value;
+            console.log(selected);
+            const streetSelect = document.querySelector('#SelectedStreet');
+            streetSelect.options.length = 1;
+            if (!selected) {
+                return;
+            }
+            try {
+                const response = await fetch(`@Url.Action("GetStreets")?city=${selected}`);
+                const streets = await response.json();
+                console.log(streets);
+                for (const street of streets) {
+                    const child = document.createElement('option');
+                    child.value = street.value;
+                    child.innerText = street.text;
+                    streetSelect.appendChild(child);
+                }
+            } catch (e) {
+                console.error(e);
+            }
         }
     </script>
 }
