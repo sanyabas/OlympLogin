@@ -19,6 +19,8 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
+        $('#SelectedRegion').select2();
+
         async function getResult(url, select) {
             try {
                 const response = await fetch(url);
@@ -30,6 +32,7 @@
                     child.innerText = object.text;
                     select.appendChild(child);
                 }
+                $(select).select2();
             } catch (e) {
                 console.error(e);
             }
@@ -39,14 +42,14 @@
             const selected = e.target.value;
             console.log(selected);
             const citiesSelect = document.querySelector('#SelectedCity');
-            const rayonsSelect = document.querySelector('#SelectedRayon');
+            
+            //const rayonsSelect = document.querySelector('#SelectedRayon');
             citiesSelect.options.length = 1;
-            rayonsSelect.options.length = 1;
+            //rayonsSelect.options.length = 1;
             if (!selected) {
                 return;
             }
-            await getResult(`@Url.Action("GetCities")?region=${selected}`, citiesSelect);
-            await getResult(`@Url.Action("GetRayons")?region=${selected}`, rayonsSelect);
+            await getResult(`@Url.Action("GetLocalities")?region=${selected}`, citiesSelect);
         }
 
         document.querySelector('#SelectedCity').onchange = async function(e) {
@@ -60,7 +63,7 @@
             await getResult(`@Url.Action("GetStreets")?city=${selected}`, streetSelect);
         }
 
-        document.querySelector('#SelectedRayon').onchange = async function(e) {
+        @*document.querySelector('#SelectedRayon').onchange = async function(e) {
             const selected = e.target.value;
             console.log(selected);
             const localitiesSelect = document.querySelector('#SelectedLocality');
@@ -69,7 +72,7 @@
                 return;
             }
             await getResult(`@Url.Action("GetLocalities")?rayon=${selected}`, localitiesSelect);
-        }
+        }*@
 
         document.querySelector('#SelectedLocality').onchange = async function(e) {
             const selected = e.target.value;

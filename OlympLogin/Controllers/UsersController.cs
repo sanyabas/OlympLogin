@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OlympLogin.Data;
 using OlympLogin.Models;
 using OlympLogin.ViewModels;
 
@@ -74,7 +75,7 @@ namespace OlympLogin.Controllers
             return View("Register", model);
         }
 
-        public IActionResult GetCities(string region)
+        public IEnumerable<SelectListItem> GetCities(string region)
         {
             if (string.IsNullOrEmpty(region))
                 return null;
@@ -95,8 +96,16 @@ namespace OlympLogin.Controllers
                     Value=ter.Code,
                     Text = $"{ter.Type} {ter.Name}"
                 }).ToList();
-            return Json(new SelectList(cities, "Value", "Text"));
+            return cities;
+            //return Json(new SelectList(cities, "Value", "Text"));
         }
+
+        //public IEnumerable<SelectListItem> GetVillages(string region)
+        //{
+        //    if (string.IsNullOrEmpty(region))
+        //        return null;
+
+        //}
 
         public IActionResult GetRayons(string region)
         {
@@ -122,25 +131,20 @@ namespace OlympLogin.Controllers
             return Json(new SelectList(rayons, "Value", "Text"));
         }
 
-        public IActionResult GetLocalities(string regionCode)
+        public IActionResult GetLocalities(string region)
         {
-
+            Console.WriteLine(region);
+            var repo = new AddressRepository(_context, region);
+            var result = repo.GetLocalities();
+            return Json(new SelectList(result, "Value", "Text"));
         }
 
         public IActionResult GetStreets(string city)
         {
-            if (string.IsNullOrEmpty(city))
-                return null;
-            var streets = _context.Street.AsNoTracking()
-                .Join(_context.Abbreviation, s=>s.Abbr, a=>a.ShortName, (street, abbr) =>  new
-                {
-                    Name=street.Name,
-                    Type=abbr.FullName,
-                    Code=street.Code,
-                    Index=street.Index,
-                    Level=abbr.Level
-                })
-                .Where(str=>)
+            Console.WriteLine(city);
+            var repo = new AddressRepository(_context);
+            var result = repo.GetStreets(city);
+            return Json(new SelectList(result, "Value", "Text"));
         }
 
         // POST: Users/Create
