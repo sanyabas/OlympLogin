@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OlympLogin.Models;
+using OlympLogin.ViewModels;
 
 namespace OlympLogin.Data
 {
@@ -83,11 +84,11 @@ namespace OlympLogin.Data
         {
             if (code.Substring(5, 3) == "000")
             {
-                districts.TryGetValue(code.Substring(2, 3), out var district);
-                return district == null ? name : $"{name} ({district})";
+                var extracted = districts.TryGetValue(code.Substring(2, 3), out var district);
+                return extracted ? $"{name} ({district})" : name;
             }
 
-            return $"{name} ({cities[$"{code.Substring(0, 8)}00000"]})";
+            return code.Substring(8, 3) == "000" ? name : $"{name} ({cities[$"{code.Substring(0, 8)}00000"]})";
 
             //return code.Substring(8, 3) == "000"
             //    ? $"{name} ({districts[code.Substring(2, 3)]} р-н)"
@@ -96,10 +97,10 @@ namespace OlympLogin.Data
 
         public IEnumerable<SelectListItem> GetLocalities()
         {
-            var result = cities.Select(city=> new SelectListItem
+            var result = cities.Select(city => new SelectListItem
             {
-                Value=city.Key,
-                Text=city.Value
+                Value = city.Key,
+                Text = city.Value
             }).ToList();
             //var villageReg = new Regex($"{regionCode}\\d{{9}}00");
             var villagePattern = $"{regionCode}_________00";
@@ -112,19 +113,21 @@ namespace OlympLogin.Data
                     Level = abbr.Level,
                     Index = terr.Index
                 })
-                .Where(vil => vil.Level == "4" && EF.Functions.Like(vil.Code,villagePattern) && vil.Code.Substring(8,3)!="000")
+                .Where(vil =>
+                    vil.Level == "4" && EF.Functions.Like(vil.Code, villagePattern) &&
+                    vil.Code.Substring(8, 3) != "000")
                 .ToList();
             Console.WriteLine(villages);
-                var r=villages
+            var r = villages
                 .Select(vil => new SelectListItem
                 //{
                 //    var newName = vil.Code.Substring(8, 3) == "000"
                 //        ? $"{vil.Name} ({districts[vil.Code.Substring(2, 3)]} р-н)"
                 //        : $"{vil.Name} (г. {cities[$"{vil.Code.Substring(0, 8)}00000"]})";
                 //    return new
-                    {
-                        Text = $"{vil.Type} {GetFullName(vil.Code, vil.Name)}",
-                        Value = vil.Code
+                {
+                    Text = $"{vil.Type} {GetFullName(vil.Code, vil.Name)}",
+                    Value = vil.Code
                     //};
                 });
             result.AddRange(r);
@@ -168,6 +171,61 @@ namespace OlympLogin.Data
                 });
 
             return streets;
+        }
+
+        public async Task<Region> GetTerritoryByCode(string code)
+        {
+            var result = await _context.Territory.AsNoTracking()
+                .Join(_context.Abbreviation, t => t.Abbreviation, a => a.ShortName, (terr, abbr) => new Region
+                {
+                    Name = terr.Name,
+                    Type = abbr.FullName,
+                    Code = terr.Code,
+                })
+                .FirstOrDefaultAsync(city => city.Code == code);
+            return result;
+        }
+
+        public async Task<Street> GetStreetByCode(string code)
+        {
+            var result = await _context.Street.AsNoTracking()
+                .Join(_context.Abbreviation, s => s.Abbr, a => a.ShortName, (street, abbr) => new Street
+                {
+                    Name = $"{abbr.FullName} {street.Name}",
+                    Code = street.Code,
+                    Index = street.Index
+                })
+                .FirstOrDefaultAsync(str => str.Code == code);
+
+            return result;
+        }
+
+        public async Task<Region> GetRegionByCode(string code)
+        {
+            return await _context.Regions.AsNoTracking().FirstOrDefaultAsync(reg => reg.Code == code);
+        }
+
+        public IEnumerable<SelectListItem> GetRegions()
+        {
+            var regions = _context.Regions.AsNoTracking()
+                .OrderBy(region => region.Name)
+                .Select(region =>
+                    new SelectListItem
+                    {
+                        Value = region.Code,
+                        Text = $"{region.Type} {region.Name}"
+                    }).ToList();
+            return regions;
+        }
+
+        public async Task<(string, string)> MakeAddress(UserRegisterViewModel model)
+        {
+            var region = await GetRegionByCode(model.SelectedRegion);
+            var city = await GetTerritoryByCode(model.SelectedCity);
+            var street = await GetStreetByCode(model.SelectedStreet);
+            var result =
+                $"{region.Type} {region.Name}, {city.Type} {GetFullName(city.Code, city.Name)}, {street.Name}, д. {model.Building}, кв. {model.Flat}";
+            return (result, street.Index);
         }
     }
 }

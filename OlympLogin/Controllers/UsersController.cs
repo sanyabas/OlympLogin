@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.AspNetCore.Http.Features.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -24,8 +29,17 @@ namespace OlympLogin.Controllers
         // GET: Users
         public async Task<IActionResult> Index()
         {
-            var kladrContext = _context.Users.Include(u => u.StreetCodeNavigation).Include(u => u.TerritoryCodeNavigation);
-            return View(await kladrContext.ToListAsync());
+            var user = GetCurrentUser();
+            ViewData["Login"] = user.Login;
+            if (user.Role == Role.Admin)
+            {
+                var users = _context.Users.AsNoTracking().Where(u => u.Role == Role.User);
+                
+                //var kladrContext = _context.Users.Include(u => u.StreetCodeNavigation).Include(u => u.TerritoryCodeNavigation);
+                return View(await users.ToListAsync());
+            }
+
+            return View("Details", user);
         }
 
         // GET: Users/Details/5
@@ -49,7 +63,7 @@ namespace OlympLogin.Controllers
         }
 
         // GET: Users/Create
-        public IActionResult Create()
+        public IActionResult Register()
         {
             var tip = new List<SelectListItem>
             {
@@ -59,14 +73,8 @@ namespace OlympLogin.Controllers
                     Text = "Выберите регион"
                 }
             };
-            var regions = _context.Regions.AsNoTracking()
-                .OrderBy(region => region.Name)
-                .Select(region =>
-                    new SelectListItem
-                    {
-                        Value = region.Code,
-                        Text = region.Name
-                    }).ToList();
+            var repo=new AddressRepository(_context);
+            var regions = repo.GetRegions();
             tip.AddRange(regions);
             var model = new UserRegisterViewModel
             {
@@ -75,25 +83,99 @@ namespace OlympLogin.Controllers
             return View("Register", model);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(UserRegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == model.Login);
+                if (user == null)
+                {
+                    var repo=new AddressRepository(_context, model.SelectedRegion);
+                    var hashed = HashPassword(model.Password);
+                    var (address, index) = await repo.MakeAddress(model);
+                    _context.Users.Add(new Users
+                    {
+                        Login = model.Login,
+                        Password = hashed,
+                        Role = Role.User,
+                        LastName = model.LastName,
+                        FirstName = model.FirstName,
+                        MiddleName = model.MiddleName,
+                        TerritoryCode = model.SelectedCity,
+                        StreetCode = model.SelectedStreet,
+                        Address = address,
+                        Index=index
+                    });
+                    await _context.SaveChangesAsync();
+                    await Authenticate(model.Login);
+                    return RedirectToAction(nameof(Index));
+
+                }
+
+                Console.WriteLine(user);
+
+                ModelState.AddModelError("", "Пользователь уже существует");
+
+            }
+
+            return View(model);
+        }
+
+        private async Task Authenticate(string login)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimsIdentity.DefaultNameClaimType, login)
+            };
+
+            if ((await _context.Users.FirstAsync(u => u.Login == login)).Role == Role.Admin)
+                claims.Add(new Claim(ClaimTypes.Role, "admin"));
+
+            var id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType,
+                ClaimsIdentity.DefaultRoleClaimType);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
+        }
+
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login");
+        }
+
+        private Users GetCurrentUser()
+        {
+            var login = HttpContext.User.Identity.Name;
+            return _context.Users.First(user => user.Login == login);
+        }
+
+        private string MakeAddress(UserRegisterViewModel model)
+        {
+            var result =
+                $"{model.SelectedRegion}, {model.SelectedCity}, {model.SelectedStreet}, д. {model.Building}, кв. {model.Flat}";
+            return result;
+        }
+
         public IEnumerable<SelectListItem> GetCities(string region)
         {
             if (string.IsNullOrEmpty(region))
                 return null;
             var cityReg = new Regex($"{region}\\d{6}0{5}");
             var cities = _context.Territory.AsNoTracking()
-                .Join(_context.Abbreviation, t=>t.Abbreviation, a=>a.ShortName, (terr, abbr)=>new
+                .Join(_context.Abbreviation, t => t.Abbreviation, a => a.ShortName, (terr, abbr) => new
                 {
-                    Name=terr.Name,
-                    Type=abbr.FullName,
-                    Code=terr.Code,
-                    Level=abbr.Level,
-                    Status=terr.Status
+                    Name = terr.Name,
+                    Type = abbr.FullName,
+                    Code = terr.Code,
+                    Level = abbr.Level,
+                    Status = terr.Status
                 })
-                .Where(ter => cityReg.IsMatch(ter.Code) && ter.Level=="3")
-                .OrderBy(ter=>ter.Name)
-                .Select(ter=> new SelectListItem
+                .Where(ter => cityReg.IsMatch(ter.Code) && ter.Level == "3")
+                .OrderBy(ter => ter.Name)
+                .Select(ter => new SelectListItem
                 {
-                    Value=ter.Code,
+                    Value = ter.Code,
                     Text = $"{ter.Type} {ter.Name}"
                 }).ToList();
             return cities;
@@ -249,6 +331,43 @@ namespace OlympLogin.Controllers
             _context.Users.Remove(users);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Login()
+        {
+            return View(new LoginViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var hashed = HashPassword(model.Password);
+                var user = await _context.Users.FirstOrDefaultAsync(u =>
+                    u.Login == model.Login && u.Password == hashed);
+                if (user != null)
+                {
+                    await Authenticate(model.Login);
+
+                    return RedirectToAction("Index");
+                }
+                ModelState.AddModelError("", "Неверные логин и/или пароль");
+            }
+
+            return View(model);
+        }
+
+        private string HashPassword(string password)
+        {
+            var hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+                password: password,
+                salt: new byte[] { 0, 5, 2, 14 },
+                prf: KeyDerivationPrf.HMACSHA1,
+                iterationCount: 10000,
+                numBytesRequested: 256 / 8));
+            return hashed;
         }
 
         private bool UsersExists(int id)

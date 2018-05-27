@@ -11,7 +11,10 @@ namespace OlympLogin.ViewModels
     public class UserRegisterViewModel
     {
         [Display(Name = "Login")] public string Login { get; set; }
-        [Display(Name = "Password")] public string Password { get; set; }
+
+        [Display(Name = "Password")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; }
         [Display(Name = "First name")] public string FirstName { get; set; }
         [Display(Name = "Last name")] public string LastName { get; set; }
         [Display(Name = "Middle name")] public string MiddleName { get; set; }
@@ -25,6 +28,12 @@ namespace OlympLogin.ViewModels
         [Display(Name = "Улица")]
         public string SelectedStreet { get; set; }
         public IEnumerable<SelectListItem> Streets { get; set; }
+
+        [Display(Name = "Дом")]
+        public string Building { get; set; }
+
+        [Display(Name = "Квартира")]
+        public string Flat { get; set; }
 
         public UserRegisterViewModel()
         {

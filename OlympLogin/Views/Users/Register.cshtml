@@ -5,15 +5,33 @@
 <h4>Users</h4>
 <hr />
 
-<form>
-    @Html.DropDownListFor(x=>Model.SelectedRegion, new SelectList(Model.Regions, "Value", "Text"))
-    
-    
-    @Html.DropDownListFor(x=>Model.SelectedCity, new SelectList(Model.Cities, "Value", "Text"))
-    
-    @Html.DropDownListFor(x=>Model.SelectedStreet, new SelectList(Model.Streets, "Value", "Text"))
-    
-    
+<form asp-antiforgery="true" asp-action="Register" asp-controller="Users">
+    <div class="validation" asp-validation-summary="ModelOnly"></div>
+
+    <div class="inputs">
+        <label asp-for="Login">Логин</label>
+        <input type="text" placeholder="Логин" asp-for="Login" required>
+        <label asp-for="Password">Пароль</label>
+        <input type="password" placeholder="Пароль" asp-for="Password" required>
+        <label asp-for="LastName">Фамилия</label>
+        <input type="text" placeholder="Фамилия" asp-for="LastName" required>
+        <label asp-for="FirstName">Имя</label>
+        <input type="text" placeholder="Имя" asp-for="FirstName" required>
+        <label asp-for="MiddleName">Отчество</label>
+        <input type="text" placeholder="Отчество" asp-for="MiddleName">
+        <label asp-for="SelectedRegion">Регион</label>
+        @Html.DropDownListFor(x => Model.SelectedRegion, new SelectList(Model.Regions, "Value", "Text"))
+        <label asp-for="SelectedCity">Населённый пункт</label>
+        @Html.DropDownListFor(x => Model.SelectedCity, new SelectList(Model.Cities, "Value", "Text"))
+        <label asp-for="SelectedStreet">Улица</label>
+        @Html.DropDownListFor(x => Model.SelectedStreet, new SelectList(Model.Streets, "Value", "Text"))
+
+        <label class="block" asp-for="Building">Дом</label>
+        <input class="block" type="text" asp-for="Building">
+        <label class="block" asp-for="Flat">Квартира</label>
+        <input class="block" type="text" asp-for="Flat">
+        <input type="submit" value="Зарегистрироваться">
+    </div>
 </form>
 
 @section Scripts {
@@ -42,7 +60,7 @@
             const selected = e.target.value;
             console.log(selected);
             const citiesSelect = document.querySelector('#SelectedCity');
-            
+
             //const rayonsSelect = document.querySelector('#SelectedRayon');
             citiesSelect.options.length = 1;
             //rayonsSelect.options.length = 1;

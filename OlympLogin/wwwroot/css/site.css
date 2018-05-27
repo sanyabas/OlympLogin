@@ -26,6 +26,60 @@
     margin: 15px;
 }
 
+
+h1,
+h2 {
+    text-align: center;
+}
+
+form {
+    display: block;
+    padding-left: 10px;
+}
+
+.inputs {
+    display: block;
+    width: 500px;
+}
+
+label,
+input,
+button {
+    margin: 5px 10px;
+}
+
+label {
+    display: inline-block;
+    width: 60px;
+}
+
+input {
+    height: 25px;
+    width: 350px;
+}
+
+.block {
+    display: inline-block;
+    width: 55px;
+    margin-right: 6px;
+}
+
+button {
+    height: 25px;
+    width: 150px;
+}
+
+
+/*table {
+    border-collapse: collapse;
+    border: solid 2px #000;
+    width: 100%;
+}*/
+
+/*tr, th {
+    border: solid 2px #000;
+}*/
+
 /* Hide/rearrange for smaller screens */
 @media screen and (max-width: 767px) {
     /* Hide captions */

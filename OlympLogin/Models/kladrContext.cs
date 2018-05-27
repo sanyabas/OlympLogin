@@ -106,6 +106,14 @@ namespace OlympLogin.Models
                     .HasForeignKey(d => d.TerritoryCode)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK__Users__Territory__534D60F1");
+
+                entity.Property(e => e.Login).HasMaxLength(50);
+
+                entity.Property(e => e.Password).HasMaxLength(100);
+
+                entity.Property(e => e.Address).HasMaxLength(200);
+
+                entity.Property(e => e.Index).HasMaxLength(6);
             });
 
             modelBuilder.Entity<Region>(entity => { entity.HasKey(e => e.Code); });
