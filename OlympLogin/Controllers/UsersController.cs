@@ -122,6 +122,11 @@ namespace OlympLogin.Controllers
             return Json(new SelectList(rayons, "Value", "Text"));
         }
 
+        public IActionResult GetLocalities(string regionCode)
+        {
+
+        }
+
         public IActionResult GetStreets(string city)
         {
             if (string.IsNullOrEmpty(city))
@@ -135,7 +140,7 @@ namespace OlympLogin.Controllers
                     Index=street.Index,
                     Level=abbr.Level
                 })
-                .Where()
+                .Where(str=>)
         }
 
         // POST: Users/Create
