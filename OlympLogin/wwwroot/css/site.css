@@ -53,7 +53,7 @@ label {
     width: 60px;
 }
 
-input {
+input:not([type="checkbox"]) {
     height: 25px;
     width: 350px;
 }
