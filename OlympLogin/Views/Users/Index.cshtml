@@ -4,31 +4,53 @@
     ViewData["Title"] = "Index";
 }
 
+
+@section Scripts {
+    <script>
+        const users = new Set();
+
+        function handleChange(id) {
+            if (users.has(id)) {
+                users.delete(id);
+            } else {
+                users.add(id);
+            }
+        }
+
+        function send() {
+            const ids = Array.from(users).join('.');
+            window.location = `@Url.Action("Index", "Letter")?ids=${ids}`;
+        }
+    </script>
+}
+
 <h2>Список пользователей</h2>
 
 <table class="table">
     <thead>
-        <tr>
-                <th>
-                    @Html.DisplayNameFor(model => model.LastName)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.FirstName)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.MiddleName)
-                </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Index)
-            </th>
-            <th></th>
-        </tr>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.LastName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.MiddleName)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Address)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Index)
+        </th>
+        <th>
+            Выбрать
+        </th>
+    </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
+    @foreach (var item in Model) {
         <tr>
             <td>
                 @Html.DisplayFor(modelItem => item.LastName)
@@ -45,7 +67,13 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Index)
             </td>
+            <td>
+                <input type="checkbox" name="selected" value="@item.Id" onclick="handleChange(@item.Id)"/>
+            </td>
         </tr>
-}
+    }
     </tbody>
 </table>
+
+<button onclick="send()">Отправить</button>
+

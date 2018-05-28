@@ -1,0 +1,8 @@
+﻿@model OlympLogin.ViewModels.LetterVIewModel
+
+<form asp-action="Send">
+    <input type="hidden" name="ids" value="@ViewData["ids"]" asp-for="Ids"/>
+    <label for="text" asp-for="Text">Текст письма</label>
+    <textarea name="text" id="text" asp-for="Text"></textarea>
+    <input type="submit" value="Отправить"/>
+</form>
