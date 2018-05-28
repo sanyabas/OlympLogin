@@ -65,7 +65,7 @@
                 @Html.DisplayFor(modelItem => item.Address)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Index)
+                @(item.Index == null ? Html.Display("Нет индекса") : Html.DisplayFor(modelItem => item.Index))
             </td>
             <td>
                 <input type="checkbox" name="selected" value="@item.Id" onclick="handleChange(@item.Id)"/>

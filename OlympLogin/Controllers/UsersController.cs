@@ -54,6 +54,7 @@ namespace OlympLogin.Controllers
                 Regions = new SelectList(regions, "Value", "Text")
             };
             ViewData["Title"] = "Регистрация";
+            ViewData["Action"] = "Register";
             return View("Register", model);
         }
 
@@ -155,7 +156,8 @@ namespace OlympLogin.Controllers
                 Regions = new SelectList(regions,"Value", "Text")
             };
             ViewData["Title"] = "Изменение";
-            return View("Register", model);
+            ViewData["Action"] = "Edit";
+            return View("Edit", model);
         }
 
         // POST: Users/Edit/5
@@ -172,6 +174,8 @@ namespace OlympLogin.Controllers
                     var user = GetCurrentUser();
                     if (user != null)
                     {
+                        _context.Users.Update(user);
+
                         user.Login = model.Login;
                         if (!string.IsNullOrEmpty(model.Password))
                         {
@@ -183,7 +187,7 @@ namespace OlympLogin.Controllers
                         user.LastName = model.LastName;
                         user.FirstName = model.FirstName;
                         user.MiddleName = model.MiddleName;
-                        if (!string.IsNullOrEmpty(model.SelectedStreet))
+                        if (!string.IsNullOrEmpty(model.SelectedStreet) || !string.IsNullOrEmpty(model.SelectedCity))
                         {
                             var repo = new AddressRepository(_context, model.SelectedRegion);
                             var (address, index) = await repo.MakeAddress(model);
@@ -191,7 +195,6 @@ namespace OlympLogin.Controllers
                             user.Index = index;
                         }
 
-                        _context.Users.Update(user);
                         await _context.SaveChangesAsync();
 
                     }
@@ -202,7 +205,7 @@ namespace OlympLogin.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View("Register", model);
+            return View("Edit", model);
         }
 
         public IActionResult Login()

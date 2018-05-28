@@ -8,11 +8,15 @@
     <p>Пожалуйста, авторизируйтесь для входа в систему</p>
     <div class="validation" asp-validation-summary="ModelOnly"></div>
     <div class="inputs">
-        <label asp-for="Login">Логин</label>
-        <input type="text" placeholder="Логин" asp-for="Login" required>
-        <label asp-for="Password">Пароль</label>
-        <input type="password" placeholder="Пароль" asp-for="Password" required>
-        <input type="submit" value="Войти" />
-    </div>
+        <div class="form-group">
+            <label asp-for="Login">Логин</label>
+            <input type="text" placeholder="Логин" asp-for="Login" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label asp-for="Password">Пароль</label>
+            <input type="password" placeholder="Пароль" asp-for="Password" class="form-control" required>
+        </div>
+        <input type="submit" value="Войти" class="btn btn-primary"/>
+        </div>
 </form>
 <a asp-action="Register">Зарегистрироваться</a>

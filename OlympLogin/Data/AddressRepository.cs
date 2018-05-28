@@ -170,17 +170,26 @@ namespace OlympLogin.Data
                     Text = $"{ter.Type} {ter.Name}"
                 });
 
+            if (!streets.Any())
+            {
+                return new[] {new SelectListItem
+                {
+                    Value=null,
+                    Text="Нет улиц"
+                }};
+            }
+
             return streets;
         }
 
-        public async Task<Region> GetTerritoryByCode(string code)
+        public async Task<Territory> GetTerritoryByCode(string code)
         {
             var result = await _context.Territory.AsNoTracking()
-                .Join(_context.Abbreviation, t => t.Abbreviation, a => a.ShortName, (terr, abbr) => new Region
+                .Join(_context.Abbreviation, t => t.Abbreviation, a => a.ShortName, (terr, abbr) => new Territory
                 {
-                    Name = terr.Name,
-                    Type = abbr.FullName,
+                    Name = $"{abbr.FullName} {terr.Name}",
                     Code = terr.Code,
+                    Index = terr.Index
                 })
                 .FirstOrDefaultAsync(city => city.Code == code);
             return result;
@@ -215,13 +224,23 @@ namespace OlympLogin.Data
                     Text = "Выберите регион"
                 }
             };
+            //};
+            //var sverdl = new SelectListItem
+            //{
+            //    Value = "66",
+            //    Text = "Область Свердловская"
+            //};
+            //var result = new List<SelectListItem> { sverdl };
             var regions = _context.Regions.AsNoTracking()
                 .OrderBy(region => region.Name)
+            //result.AddRange(regions);
+            //var final = result
                 .Select(region =>
                     new SelectListItem
                     {
                         Value = region.Code,
-                        Text = $"{region.Type} {region.Name}"
+                        Text = $"{region.Type} {region.Name}",
+                        Selected = region.Code == "66"
                     }).ToList();
             tip.AddRange(regions);
             return tip;
@@ -231,10 +250,46 @@ namespace OlympLogin.Data
         {
             var region = await GetRegionByCode(model.SelectedRegion);
             var city = await GetTerritoryByCode(model.SelectedCity);
-            var street = await GetStreetByCode(model.SelectedStreet);
-            var result =
-                $"{region.Type} {region.Name}, {city.Type} {GetFullName(city.Code, city.Name)}, {street.Name}, д. {model.Building}, кв. {model.Flat}";
-            return (result, street.Index);
+            var street = model.SelectedStreet == null ? null : await GetStreetByCode(model.SelectedStreet);
+            var parts = new List<string>
+            {
+                $"{region.Type} {region.Name}",
+                $"{GetFullName(city.Code, city.Name)}"
+            };
+            string result;
+            string index;
+            if (street == null)
+            {
+                parts.AddRange(new[] {$"д. {model.Building}",
+                    $"кв. {model.Flat}"});
+                result = string.Join(", ", parts);
+                index= city.Index;
+            }
+            else
+            {
+                parts.AddRange(new []{$"{street.Name}",
+                    $"д. {model.Building}",
+                    $"кв. {model.Flat}"
+                });
+                result = string.Join(", ", parts);
+                index=street.Index;
+            }
+
+            return (result, index);
+
+            //        $"{street.Name}",
+            //            $"д. {model.Building}",
+            //            $"кв. {model.Flat}"
+            //        };
+            //        if (street == null)
+            //        {
+            //            parts.RemoveAt(2);
+            //        }
+
+            //var result = string.Join(", ", parts);
+            //        //var result =
+            //        //    $"{region.Type} {region.Name}, {city.Type} {GetFullName(city.Code, city.Name)}, {street.Name}, д. {model.Building}, кв. {model.Flat}";
+            //        return (result, street!=null? street.Index:c);
         }
     }
 }

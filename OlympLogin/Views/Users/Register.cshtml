@@ -1,40 +1,62 @@
 ﻿@model OlympLogin.ViewModels.UserRegisterViewModel
 
 <h2>@ViewData["Title"]</h2>
-
+@Url.Action((string)ViewData["Action"],"Users");
+@ViewData["Action"]
 
 <form asp-antiforgery="true" asp-action="Register" asp-controller="Users">
     <div class="validation" asp-validation-summary="ModelOnly"></div>
 
     <div class="inputs">
-        <label asp-for="Login">Логин</label>
-        <input type="text" placeholder="Логин" asp-for="Login" required>
+        <div class="form-group">
+            <label asp-for="Login">Логин</label>
+            <input type="text" placeholder="Логин" asp-for="Login" class="form-control" required>
+        </div>
+    <div class="form-group">
         <label asp-for="Password">Пароль</label>
-        <input type="password" placeholder="Пароль" asp-for="Password">
+        <input type="password" placeholder="Пароль" asp-for="Password" class="form-control">
+    </div>
+    <div class="form-group">
         <label asp-for="LastName">Фамилия</label>
-        <input type="text" placeholder="Фамилия" asp-for="LastName" required>
+        <input type="text" placeholder="Фамилия" asp-for="LastName" class="form-control" required>
+    </div>   
+    <div class="form-group">
         <label asp-for="FirstName">Имя</label>
-        <input type="text" placeholder="Имя" asp-for="FirstName" required>
+        <input type="text" placeholder="Имя" asp-for="FirstName" class="form-control" required>
+    </div> 
+    <div class="form-group">
         <label asp-for="MiddleName">Отчество</label>
-        <input type="text" placeholder="Отчество" asp-for="MiddleName">
+        <input type="text" placeholder="Отчество" asp-for="MiddleName" class="form-control">
+    </div>  
+    <div class="form-group">
         <label asp-for="SelectedRegion">Регион</label>
         @Html.DropDownListFor(x => Model.SelectedRegion, new SelectList(Model.Regions, "Value", "Text"))
+    </div>  
+    <div class="form-group">
         <label asp-for="SelectedCity">Населённый пункт</label>
         @Html.DropDownListFor(x => Model.SelectedCity, new SelectList(Model.Cities, "Value", "Text"))
+    </div>  
+    <div class="form-group">
         <label asp-for="SelectedStreet">Улица</label>
         @Html.DropDownListFor(x => Model.SelectedStreet, new SelectList(Model.Streets, "Value", "Text"))
-
+    </div>  
+    <div class="form-group">
         <label class="block" asp-for="Building">Дом</label>
-        <input class="block" type="text" asp-for="Building">
+        <input class="block" type="text" asp-for="Building" class="form-control">
+    </div>   
+    <div class="form-group">
         <label class="block" asp-for="Flat">Квартира</label>
-        <input class="block" type="text" asp-for="Flat">
-        <input type="submit" value="Зарегистрироваться">
+        <input class="block" type="text" asp-for="Flat" class="form-control">
+    </div>
+        <input type="submit" value="Зарегистрироваться" class="btn btn-primary">
     </div>
 </form>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     <script>
+
+        //$('#SelectedRegion').options.find(opt => opt.value === '66').selected = true;
         $('#SelectedRegion').select2();
 
         async function getResult(url, select) {
@@ -54,7 +76,7 @@
             }
         }
 
-        document.querySelector('#SelectedRegion').onchange = async function(e) {
+        document.querySelector('#SelectedRegion').onchange = async function (e) {
             const selected = e.target.value;
             console.log(selected);
             const citiesSelect = document.querySelector('#SelectedCity');
@@ -79,26 +101,7 @@
             await getResult(`@Url.Action("GetStreets")?city=${selected}`, streetSelect);
         }
 
-        @*document.querySelector('#SelectedRayon').onchange = async function(e) {
-            const selected = e.target.value;
-            console.log(selected);
-            const localitiesSelect = document.querySelector('#SelectedLocality');
-            localitiesSelect.options.length = 1;
-            if (!selected) {
-                return;
-            }
-            await getResult(`@Url.Action("GetLocalities")?rayon=${selected}`, localitiesSelect);
-        }*@
-
-        document.querySelector('#SelectedLocality').onchange = async function(e) {
-            const selected = e.target.value;
-            console.log(selected);
-            const streetSelect = document.querySelector('#SelectedStreet');
-            streetSelect.options.length = 1;
-            if (!selected) {
-                return;
-            }
-            await getResult(`@Url.Action("GetStreets")?city=${selected}`, streetSelect);
-        }
+        $('#SelectedRegion').val(66);
+        $('#SelectedRegion').trigger('change');
     </script>
 }
