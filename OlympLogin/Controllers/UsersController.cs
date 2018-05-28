@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Http.Features.Authentication;
 using Microsoft.AspNetCore.Mvc;
@@ -27,6 +28,7 @@ namespace OlympLogin.Controllers
         }
 
         // GET: Users
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             var user = GetCurrentUser();
@@ -135,7 +137,7 @@ namespace OlympLogin.Controllers
         private Users GetCurrentUser()
         {
             var login = HttpContext.User.Identity.Name;
-            return _context.Users.First(user => user.Login == login);
+            return _context.Users.FirstOrDefault(user => user.Login == login);
         }
 
         // GET: Users/Edit/5

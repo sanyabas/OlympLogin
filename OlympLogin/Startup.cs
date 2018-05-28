@@ -34,7 +34,7 @@ namespace OlympLogin
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options => //CookieAuthenticationOptions
                 {
-                    options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Login");
+                    options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Users/Login");
                 });
         }
 
