@@ -74,6 +74,13 @@ namespace OlympLogin.Controllers
             return Json(new SelectList(result, "Value", "Text"));
         }
 
+        public IActionResult GetBuildings(string street)
+        {
+            var repo = new AddressRepository(_context);
+            var result = repo.GetBuildings(street);
+            return Json(new SelectList(result, "Value", "Text"));
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(UserRegisterViewModel model)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -182,6 +183,44 @@ namespace OlympLogin.Data
             return streets;
         }
 
+        public IEnumerable<SelectListItem> GetBuildings(string streetCode)
+        {
+            var numReg = new Regex("\\d+.*");
+            if (string.IsNullOrEmpty(streetCode))
+                return null;
+            var strPattern = $"{streetCode.Substring(0, 15)}____";
+            var buildings = _context.Building
+                //.AsNoTracking()
+                .Where(house => EF.Functions.Like(house.Code, strPattern))
+                .ToList()
+                .SelectMany(house => house.Name.Split(",", StringSplitOptions.None)
+                    .Select(x => new Building
+                    {
+                        Code = house.Code,
+                        Index = house.Index,
+                        Name = numReg.Match(x).Value
+                    }))
+                .OrderBy(house => house.Name)
+                .Select(house => new SelectListItem
+                {
+                    Value = house.Code,
+                    Text = house.Name
+                });
+            if (!buildings.Any())
+            {
+                return new[]
+                {
+                    new SelectListItem
+                    {
+                        Value = null,
+                        Text = "Нет домов"
+                    }
+                };
+            }
+
+            return buildings;
+        }
+
         public async Task<Territory> GetTerritoryByCode(string code)
         {
             var result = await _context.Territory.AsNoTracking()
@@ -212,6 +251,11 @@ namespace OlympLogin.Data
         public async Task<Region> GetRegionByCode(string code)
         {
             return await _context.Regions.AsNoTracking().FirstOrDefaultAsync(reg => reg.Code == code);
+        }
+
+        private async Task<Building> GetBuildingByCode(string buildingCode)
+        {
+            return await _context.Building.AsNoTracking().FirstOrDefaultAsync(house => house.Code == buildingCode);
         }
 
         public IEnumerable<SelectListItem> GetRegions()
@@ -251,6 +295,7 @@ namespace OlympLogin.Data
             var region = await GetRegionByCode(model.SelectedRegion);
             var city = await GetTerritoryByCode(model.SelectedCity);
             var street = model.SelectedStreet == null ? null : await GetStreetByCode(model.SelectedStreet);
+            var building = model.SelectedBuilding == null ? null : await GetBuildingByCode(model.SelectedBuilding);
             var parts = new List<string>
             {
                 $"{region.Type} {region.Name}",
@@ -260,20 +305,25 @@ namespace OlympLogin.Data
             string index;
             if (street == null)
             {
-                parts.AddRange(new[] {$"д. {model.Building}",
+                parts.AddRange(new[] {$"д. {model.BuildingName}",
                     $"кв. {model.Flat}"});
                 result = string.Join(", ", parts);
-                index= city.Index;
+                index = city.Index;
             }
             else
             {
-                parts.AddRange(new []{$"{street.Name}",
-                    $"д. {model.Building}",
+                parts.AddRange(new[]{$"{street.Name}",
+                    $"д. {model.BuildingName}",
                     $"кв. {model.Flat}"
                 });
                 result = string.Join(", ", parts);
-                index=street.Index;
+                index = street.Index;
             }
+
+            if (building?.Index == null)
+                index = street?.Index ?? city.Index;
+            else
+                index = building.Index;
 
             return (result, index);
 

@@ -11,6 +11,7 @@ namespace OlympLogin.Models
         public virtual DbSet<Users> Users { get; set; }
         public virtual DbSet<Region> Regions { get; set; }
         public virtual DbSet<Abbreviation> Abbreviation { get; set; }
+        public virtual DbSet<Building> Building { get; set; }
 
         // Unable to generate entity type for table 'dbo.Name'. Please see the warning messages.
 
@@ -114,6 +115,11 @@ namespace OlympLogin.Models
                 entity.Property(e => e.Address).HasMaxLength(200);
 
                 entity.Property(e => e.Index).HasMaxLength(6);
+
+                entity.Property(e => e.BuildingCode).HasMaxLength(20);
+
+                entity.Property(e => e.Building).HasMaxLength(5);
+
             });
 
             modelBuilder.Entity<Region>(entity => { entity.HasKey(e => e.Code); });
@@ -129,6 +135,14 @@ namespace OlympLogin.Models
                 entity.Property(e => e.FullName).HasMaxLength(29);
 
                 entity.Property(e => e.TypeCode).HasMaxLength(3);
+            });
+
+            modelBuilder.Entity<Building>(entity =>
+            {
+                entity.HasKey(e => e.Code);
+                entity.Property(e => e.Name).HasMaxLength(40);
+                entity.Property(e => e.Code).HasMaxLength(19);
+                entity.Property(e => e.Index).HasMaxLength(6);
             });
         }
     }

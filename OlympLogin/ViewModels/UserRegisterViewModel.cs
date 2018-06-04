@@ -30,7 +30,10 @@ namespace OlympLogin.ViewModels
         public IEnumerable<SelectListItem> Streets { get; set; }
 
         [Display(Name = "Дом")]
-        public string Building { get; set; }
+        public string SelectedBuilding { get; set; }
+        public IEnumerable<SelectListItem> Buildings { get; set; }
+
+        public string BuildingName { get; set; }
 
         [Display(Name = "Квартира")]
         public string Flat { get; set; }
@@ -40,6 +43,7 @@ namespace OlympLogin.ViewModels
             Regions = new List<SelectListItem>();
             Cities = new List<SelectListItem>();
             Streets = new List<SelectListItem>();
+            Buildings = new List<SelectListItem>();
         }
     }
 }

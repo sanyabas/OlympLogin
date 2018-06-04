@@ -39,9 +39,10 @@
             @Html.DropDownListFor(x => Model.SelectedStreet, new SelectList(Model.Streets, "Value", "Text"))
         </div>
         <div class="form-group">
-            <label class="block" asp-for="Building">Дом</label>
-            <input class="block" type="text" asp-for="Building" class="form-control">
-        </div>
+            <label class="block" asp-for="SelectedBuilding">Дом</label>
+            @Html.DropDownListFor(x=>Model.SelectedBuilding, new SelectList(Model.Buildings, "Value", "Text"))
+            <input type="hidden" asp-for="BuildingName" id="BuildingName"/>
+        </div> 
         <div class="form-group">
             <label class="block" asp-for="Flat">Квартира</label>
             <input class="block" type="text" asp-for="Flat" class="form-control">
@@ -97,6 +98,21 @@
                 return;
             }
             await getResult(`@Url.Action("GetStreets")?city=${selected}`, streetSelect);
+        }
+
+        document.querySelector('#SelectedStreet').onchange = async function(e) {
+            const selected = e.target.value;
+            const buildSelect = document.querySelector('#SelectedBuilding');
+            buildSelect.options.length = 1;
+            if (!selected) {
+                return;
+            }
+            await getResult(`@Url.Action("GetBuildings")?street=${selected}`, buildSelect);
+        }
+
+        document.querySelector('#SelectedBuilding').onchange = function(e) {
+            const selected = e.target.selectedOptions[0];
+            document.querySelector('#BuildingName').value = selected.innerHTML;
         }
 
         $('#SelectedRegion').val(66);
