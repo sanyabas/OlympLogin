@@ -196,7 +196,7 @@ namespace OlympLogin.Data
                 .SelectMany(house => house.Name.Split(",", StringSplitOptions.None)
                     .Select(x => new Building
                     {
-                        Code = house.Code,
+                        Code = $"${house.Code}_${numReg.Match(x).Value}",
                         Index = house.Index,
                         Name = numReg.Match(x).Value
                     }))
@@ -295,7 +295,7 @@ namespace OlympLogin.Data
             var region = await GetRegionByCode(model.SelectedRegion);
             var city = await GetTerritoryByCode(model.SelectedCity);
             var street = model.SelectedStreet == null ? null : await GetStreetByCode(model.SelectedStreet);
-            var building = model.SelectedBuilding == null ? null : await GetBuildingByCode(model.SelectedBuilding);
+            var building = model.SelectedBuilding == null ? null : await GetBuildingByCode(model.SelectedBuilding.Substring(0, 19));
             var parts = new List<string>
             {
                 $"{region.Type} {region.Name}",

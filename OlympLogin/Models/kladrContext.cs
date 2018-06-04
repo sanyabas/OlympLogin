@@ -116,9 +116,11 @@ namespace OlympLogin.Models
 
                 entity.Property(e => e.Index).HasMaxLength(6);
 
-                entity.Property(e => e.BuildingCode).HasMaxLength(20);
+                entity.Property(e => e.BuildingCode).HasMaxLength(25);
 
                 entity.Property(e => e.Building).HasMaxLength(5);
+
+                entity.Property(e => e.Flat).HasMaxLength(5);
 
             });
 

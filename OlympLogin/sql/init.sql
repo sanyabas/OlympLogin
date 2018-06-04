@@ -49,8 +49,8 @@ MiddleName NVARCHAR(100),
 [Index] VARCHAR(6),
 TerritoryCode VARCHAR(13) NOT NULL REFERENCES dbo.Territory(Code),
 StreetCode VARCHAR(17) NOT NULL REFERENCES dbo.Street(Code),
-Building INT,
-BuilddingCode VARCHAR(20),
-Flat INT,
+Building VARCHAR(5),
+BuildingCode VARCHAR(25),
+Flat VARCHAR(5),
 )
 GO

@@ -25,7 +25,7 @@ namespace OlympLogin.Models
         public string StreetCode { get; set; }
         public string Building { get; set; }
         public string BuildingCode { get; set; }
-        public int? Flat { get; set; }
+        public string Flat { get; set; }
 
         public Street StreetCodeNavigation { get; set; }
         public Territory TerritoryCodeNavigation { get; set; }

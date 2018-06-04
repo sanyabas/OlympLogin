@@ -90,6 +90,7 @@ namespace OlympLogin.Controllers
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.Login == model.Login);
                 if (user == null)
                 {
+                    Console.WriteLine(model.SelectedBuilding);
                     var repo=new AddressRepository(_context, model.SelectedRegion);
                     var hashed = HashPassword(model.Password);
                     var (address, index) = await repo.MakeAddress(model);
@@ -104,7 +105,10 @@ namespace OlympLogin.Controllers
                         TerritoryCode = model.SelectedCity,
                         StreetCode = model.SelectedStreet,
                         Address = address,
-                        Index=index
+                        Index=index,
+                        Building = model.BuildingName,
+                        BuildingCode = model.SelectedBuilding,
+                        Flat=model.Flat
                     });
                     await _context.SaveChangesAsync();
                     await Authenticate(model.Login);
@@ -149,18 +153,28 @@ namespace OlympLogin.Controllers
         }
 
         // GET: Users/Edit/5
-        public IActionResult Edit()
+        public async Task<IActionResult> Edit()
         {
             var user = GetCurrentUser();
-            var repo = new AddressRepository(_context);
+            var regionCode = user.TerritoryCode.Substring(0, 2);
+            var repo = new AddressRepository(_context, regionCode);
             var regions = repo.GetRegions();
+            var cities = repo.GetLocalities();//.Where(city=>city.Value!=user.TerritoryCode);
+            var streets = repo.GetStreets(user.TerritoryCode);//.Where(str => str.Value != user.StreetCode);
+            var buildings = repo.GetBuildings(user.StreetCode);//.Where(house => house.Value != user.BuildingCode);
             var model = new UserRegisterViewModel
             {
                 Login = user.Login,
                 LastName = user.LastName,
                 FirstName = user.FirstName,
                 MiddleName = user.MiddleName,
-                Regions = new SelectList(regions,"Value", "Text")
+                Regions = new SelectList(regions,"Value", "Text"),
+                Cities = new SelectList(cities, "Value", "Text"),
+                SelectedCity = user.TerritoryCode,
+                Streets=new SelectList(streets, "Value", "Text"),
+                SelectedStreet = user.StreetCode,
+                Buildings = new SelectList(buildings, "Value", "Text"),
+                SelectedBuilding = user.BuildingCode
             };
             ViewData["Title"] = "Изменение";
             ViewData["Action"] = "Edit";
