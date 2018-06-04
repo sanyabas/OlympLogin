@@ -175,7 +175,7 @@ namespace OlympLogin.Data
             {
                 return new[] {new SelectListItem
                 {
-                    Value=null,
+                    Value="0",
                     Text="Нет улиц"
                 }};
             }
@@ -196,7 +196,7 @@ namespace OlympLogin.Data
                 .SelectMany(house => house.Name.Split(",", StringSplitOptions.None)
                     .Select(x => new Building
                     {
-                        Code = $"${house.Code}_${numReg.Match(x).Value}",
+                        Code = $"{house.Code}_{numReg.Match(x).Value}",
                         Index = house.Index,
                         Name = numReg.Match(x).Value
                     }))
@@ -212,7 +212,7 @@ namespace OlympLogin.Data
                 {
                     new SelectListItem
                     {
-                        Value = null,
+                        Value = "0",
                         Text = "Нет домов"
                     }
                 };
@@ -294,8 +294,8 @@ namespace OlympLogin.Data
         {
             var region = await GetRegionByCode(model.SelectedRegion);
             var city = await GetTerritoryByCode(model.SelectedCity);
-            var street = model.SelectedStreet == null ? null : await GetStreetByCode(model.SelectedStreet);
-            var building = model.SelectedBuilding == null ? null : await GetBuildingByCode(model.SelectedBuilding.Substring(0, 19));
+            var street = model.SelectedStreet == "0" ? null : await GetStreetByCode(model.SelectedStreet);
+            var building = model.SelectedBuilding == "0" ? null : await GetBuildingByCode(model.SelectedBuilding.Substring(0, 19));
             var parts = new List<string>
             {
                 $"{region.Type} {region.Name}",
@@ -303,22 +303,27 @@ namespace OlympLogin.Data
             };
             string result;
             string index;
-            if (street == null)
-            {
-                parts.AddRange(new[] {$"д. {model.BuildingName}",
-                    $"кв. {model.Flat}"});
-                result = string.Join(", ", parts);
-                index = city.Index;
-            }
-            else
-            {
-                parts.AddRange(new[]{$"{street.Name}",
-                    $"д. {model.BuildingName}",
-                    $"кв. {model.Flat}"
-                });
-                result = string.Join(", ", parts);
-                index = street.Index;
-            }
+            if (street != null)
+                parts.Add($"{street.Name}");
+            if (building != null)
+                parts.Add($"д. {model.BuildingName}");
+            parts.Add($"кв. {model.Flat}");
+            //if (street == null)
+            //{
+            //    parts.AddRange(new[] {$"д. {model.BuildingName}",
+            //        $"кв. {model.Flat}"});
+            //    result = string.Join(", ", parts);
+            //    index = city.Index;
+            //}
+            //else
+            //{
+            //    parts.AddRange(new[]{$"{street.Name}",
+            //        $"д. {model.BuildingName}",
+            //        $"кв. {model.Flat}"
+            //    });
+            //    index = street.Index;
+            //}
+            result = string.Join(", ", parts);
 
             if (building?.Index == null)
                 index = street?.Index ?? city.Index;

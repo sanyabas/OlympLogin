@@ -29,7 +29,7 @@ namespace OlympLogin
             services.AddMvc();
 
             const string connection = @"Server=lenovo-g500;Database=kladr;Trusted_Connection=True;";
-            services.AddDbContext<kladrContext>(options => options.UseSqlServer(connection));
+            services.AddDbContext<kladrContext>(options => options.UseSqlServer(connection, sqlServerOptions => sqlServerOptions.CommandTimeout(60)));
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options => //CookieAuthenticationOptions

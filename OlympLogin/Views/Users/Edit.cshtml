@@ -62,7 +62,9 @@
             try {
                 const response = await fetch(url);
                 const objects = await response.json();
+
                 console.log(objects);
+                
                 for (const object of objects) {
                     const child = document.createElement('option');
                     child.value = object.value;
@@ -70,6 +72,10 @@
                     select.appendChild(child);
                 }
                 $(select).select2();
+                if (objects.length <= 1) {
+                    return false;
+                }
+                return true;
             } catch (e) {
                 console.error(e);
             }
@@ -93,17 +99,22 @@
             const selected = e.target.value;
             console.log(selected);
             const streetSelect = document.querySelector('#SelectedStreet');
-            streetSelect.options.length = 1;
+            streetSelect.options.length = 0;
             if (!selected) {
                 return;
             }
-            await getResult(`@Url.Action("GetStreets")?city=${selected}`, streetSelect);
+            const res = await getResult(`@Url.Action("GetStreets")?city=${selected}`, streetSelect);
+            if (!res) {
+                const buildSelect = document.querySelector('#SelectedBuilding');
+                buildSelect.options.length = 0;
+                await getResult(`@Url.Action("GetBuildings")?street=${selected}0000`, buildSelect);
+            }
         }
 
         document.querySelector('#SelectedStreet').onchange = async function(e) {
             const selected = e.target.value;
             const buildSelect = document.querySelector('#SelectedBuilding');
-            buildSelect.options.length = 1;
+            buildSelect.options.length = 0;
             if (!selected) {
                 return;
             }
@@ -116,6 +127,10 @@
         }
 
         $('#SelectedRegion').val(66);
-        $('#SelectedRegion').trigger('change');
+        //$('#SelectedRegion').trigger('change');
+
+        $('#SelectedCity').select2();
+        $('#SelectedStreet').select2();
+        $('#SelectedBuilding').select2();
     </script>
 }

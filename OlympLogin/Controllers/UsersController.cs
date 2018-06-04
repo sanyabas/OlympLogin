@@ -36,7 +36,7 @@ namespace OlympLogin.Controllers
             if (user.Role == Role.Admin)
             {
                 var users = _context.Users.AsNoTracking().Where(u => u.Role == Role.User);
-                
+
                 //var kladrContext = _context.Users.Include(u => u.StreetCodeNavigation).Include(u => u.TerritoryCodeNavigation);
                 return View(await users.ToListAsync());
             }
@@ -47,7 +47,7 @@ namespace OlympLogin.Controllers
         // GET: Users/Create
         public IActionResult Register()
         {
-            var repo=new AddressRepository(_context);
+            var repo = new AddressRepository(_context);
             var regions = repo.GetRegions();
             var model = new UserRegisterViewModel
             {
@@ -71,6 +71,7 @@ namespace OlympLogin.Controllers
             Console.WriteLine(city);
             var repo = new AddressRepository(_context);
             var result = repo.GetStreets(city);
+            Console.WriteLine(result.ToList()[0]);
             return Json(new SelectList(result, "Value", "Text"));
         }
 
@@ -78,6 +79,7 @@ namespace OlympLogin.Controllers
         {
             var repo = new AddressRepository(_context);
             var result = repo.GetBuildings(street);
+            Console.WriteLine(result.ToList()[0]);
             return Json(new SelectList(result, "Value", "Text"));
         }
 
@@ -91,7 +93,7 @@ namespace OlympLogin.Controllers
                 if (user == null)
                 {
                     Console.WriteLine(model.SelectedBuilding);
-                    var repo=new AddressRepository(_context, model.SelectedRegion);
+                    var repo = new AddressRepository(_context, model.SelectedRegion);
                     var hashed = HashPassword(model.Password);
                     var (address, index) = await repo.MakeAddress(model);
                     _context.Users.Add(new Users
@@ -105,10 +107,10 @@ namespace OlympLogin.Controllers
                         TerritoryCode = model.SelectedCity,
                         StreetCode = model.SelectedStreet,
                         Address = address,
-                        Index=index,
+                        Index = index,
                         Building = model.BuildingName,
                         BuildingCode = model.SelectedBuilding,
-                        Flat=model.Flat
+                        Flat = model.Flat
                     });
                     await _context.SaveChangesAsync();
                     await Authenticate(model.Login);
@@ -160,21 +162,24 @@ namespace OlympLogin.Controllers
             var repo = new AddressRepository(_context, regionCode);
             var regions = repo.GetRegions();
             var cities = repo.GetLocalities();//.Where(city=>city.Value!=user.TerritoryCode);
-            var streets = repo.GetStreets(user.TerritoryCode);//.Where(str => str.Value != user.StreetCode);
-            var buildings = repo.GetBuildings(user.StreetCode);//.Where(house => house.Value != user.BuildingCode);
+            var streets = repo.GetStreets(user.TerritoryCode == "0" ? null : user.TerritoryCode);//.Where(str => str.Value != user.StreetCode);
+            var buildings = repo.GetBuildings(user.StreetCode=="0"?null : user.StreetCode);//.Where(house => house.Value != user.BuildingCode);
             var model = new UserRegisterViewModel
             {
                 Login = user.Login,
                 LastName = user.LastName,
                 FirstName = user.FirstName,
                 MiddleName = user.MiddleName,
-                Regions = new SelectList(regions,"Value", "Text"),
+                Regions = new SelectList(regions, "Value", "Text"),
+                SelectedRegion = regionCode,
                 Cities = new SelectList(cities, "Value", "Text"),
                 SelectedCity = user.TerritoryCode,
-                Streets=new SelectList(streets, "Value", "Text"),
+                Streets = user.TerritoryCode == "0" ? new SelectList(new[] { new SelectListItem { Value = "0", Text = "Нет улиц" } }, "Value", "Text") : new SelectList(streets, "Value", "Text"),
                 SelectedStreet = user.StreetCode,
-                Buildings = new SelectList(buildings, "Value", "Text"),
-                SelectedBuilding = user.BuildingCode
+                Buildings = user.StreetCode == "0" ? new SelectList(new[] { new SelectListItem { Value = "0", Text = "Нет домов" } }, "Value", "Text") : new SelectList(buildings, "Value", "Text"),
+                SelectedBuilding = user.BuildingCode,
+                BuildingName = user.Building,
+                Flat = user.Flat
             };
             ViewData["Title"] = "Изменение";
             ViewData["Action"] = "Edit";
@@ -208,13 +213,17 @@ namespace OlympLogin.Controllers
                         user.LastName = model.LastName;
                         user.FirstName = model.FirstName;
                         user.MiddleName = model.MiddleName;
-                        if (!string.IsNullOrEmpty(model.SelectedStreet) || !string.IsNullOrEmpty(model.SelectedCity))
-                        {
-                            var repo = new AddressRepository(_context, model.SelectedRegion);
-                            var (address, index) = await repo.MakeAddress(model);
-                            user.Address = address;
-                            user.Index = index;
-                        }
+                        //if (!string.IsNullOrEmpty(model.SelectedStreet) || !string.IsNullOrEmpty(model.SelectedCity))
+                        //{
+                        var repo = new AddressRepository(_context, model.SelectedRegion);
+                        var (address, index) = await repo.MakeAddress(model);
+                        user.Address = address;
+                        user.Index = index;
+                        user.Building = model.BuildingName;
+                        user.BuildingCode = model.SelectedBuilding;
+                        user.StreetCode = model.SelectedStreet;
+                        user.TerritoryCode = model.SelectedCity;
+                        //}
 
                         await _context.SaveChangesAsync();
 
@@ -222,7 +231,7 @@ namespace OlympLogin.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    
+
                 }
                 return RedirectToAction(nameof(Index));
             }
